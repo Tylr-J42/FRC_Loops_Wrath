@@ -12,4 +12,8 @@ public class ShooterConstants {
     public static final double kRightShooterI = 0.0;
     public static final double kRightShooterD = 0.0;
 
+    public static final double kFFLeft = 0.0;
+
+    public static final double kFFRight = 0.0;
+
 }
