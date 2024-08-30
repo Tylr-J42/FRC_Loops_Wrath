@@ -6,7 +6,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Shoulder extends SubsystemBase{
 
-
     private PIDController shooterPivotPID;
     private ArmFeedforward shooterPivotFF;
 
