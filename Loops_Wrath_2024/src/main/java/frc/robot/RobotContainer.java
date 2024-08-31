@@ -4,9 +4,14 @@
 
 package frc.robot;
 
+import java.util.Optional;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -27,12 +32,16 @@ public class RobotContainer {
     private CommandXboxController driver;
     private CommandXboxController operator;
 
+    public double tvecX;
+    public double tvecY;
+    public double tvecZ;
+
     public RobotContainer() {
         drivetrain = new Drivetrain(new Pose2d());
         shooter = new Shooter();
         intake = new Intake();
-        shoulder = new Shoulder();
         feeder = new Feeder();
+        shoulder = new Shoulder(() -> feeder.getBeamBreak());
 
         driver = new CommandXboxController(OIConstants.kDriverXboxUSB);
         operator = new CommandXboxController(OIConstants.kOperatorXboxUSB);
@@ -45,6 +54,26 @@ public class RobotContainer {
         NetworkTableInstance rpi = NetworkTableInstance.getDefault();
 
         NetworkTable table = rpi.getTable("Fiducial");
+
+        NetworkTableEntry tvecXEntry;
+        NetworkTableEntry tvecYEntry;
+        NetworkTableEntry tvecZEntry;
+        
+        Optional<Alliance> alliance = DriverStation.getAlliance();
+        if(DriverStation.Alliance.Red.equals(alliance)){
+            tvecXEntry = table.getEntry("tag4tvecX");
+            tvecYEntry = table.getEntry("tag4tvecY");
+            tvecZEntry = table.getEntry("tag4tvecZ");
+        }else{
+            tvecXEntry = table.getEntry("tag7tvecX");
+            tvecYEntry = table.getEntry("tag7tvecY");
+            tvecZEntry = table.getEntry("tag7tvecZ");
+        }
+
+        tvecX = tvecXEntry.getDouble(0);
+        tvecY = tvecYEntry.getDouble(0);
+        tvecZ = tvecZEntry.getDouble(0);
+
     }
 
     private void configureBindings() {
@@ -59,9 +88,7 @@ public class RobotContainer {
         );
 
         driver.leftTrigger().whileTrue(intake.runIntake(() -> 1.0));
-    
-        driver.rightTrigger().whileTrue(feeder.feedNote(() -> 1.0));
-    }
+        }
 
     public Command getAutonomousCommand() {
         return Commands.print("No autonomous command configured");    

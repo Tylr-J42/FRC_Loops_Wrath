@@ -13,4 +13,5 @@ public class ShoulderConstants {
 
     public static final double kStowedAngle = 10.0;
     public static final double kFFAngleCompensation = 83.0;
+    public static final double kAmpAngle = 200.0;
 }
