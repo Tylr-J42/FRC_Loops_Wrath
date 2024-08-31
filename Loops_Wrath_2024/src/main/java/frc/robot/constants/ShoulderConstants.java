@@ -10,4 +10,7 @@ public class ShoulderConstants {
     public static final double kFFShoulderS = 0.0;
     public static final double kFFShoulderV = 0.0;
     public static final double kFFShoulderG = 0.0;
+
+    public static final double kStowedAngle = 10.0;
+    public static final double kFFAngleCompensation = 83.0;
 }
