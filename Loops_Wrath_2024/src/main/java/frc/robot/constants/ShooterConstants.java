@@ -16,4 +16,6 @@ public class ShooterConstants {
 
     public static final double kFFRight = 0.0;
 
+    public static final double flywheelSpeedRight = 3600.0;
+    public static final double flywheelSpeedLeft = 5400.0;
 }

@@ -15,7 +15,9 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.constants.OIConstants;
+import frc.robot.constants.ShooterConstants;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.Feeder;
 import frc.robot.subsystems.Intake;
@@ -48,6 +50,8 @@ public class RobotContainer {
 
         driver = new CommandXboxController(OIConstants.kDriverXboxUSB);
         operator = new CommandXboxController(OIConstants.kOperatorXboxUSB);
+
+        Trigger beamBreakTrigger = new Trigger(feeder::getBeamBreak);
 
         configureBindings();
          coprocessorNetworktables();
@@ -94,9 +98,20 @@ public class RobotContainer {
             )
         );
 
-        driver.leftTrigger().whileTrue(intake.runIntake(() -> 1.0));
+        feeder.setDefaultCommand(feeder.manualFeedNote(() -> 0.0));
+        shooter.setDefaultCommand(shooter.spinOff());
 
-        
+        driver.leftTrigger().whileTrue(Commands.parallel(
+            intake.runIntake(() -> 1.0),
+            feeder.autoFeeding()
+        ));
+
+        driver.rightTrigger().whileTrue(
+            Commands.parallel(feeder.manualFeedNote(() -> 1.0), 
+            shooter.spinup()));
+
+        operator.rightTrigger().toggleOnTrue(shooter.spinup());
+
         }
 
     public Command getAutonomousCommand() {

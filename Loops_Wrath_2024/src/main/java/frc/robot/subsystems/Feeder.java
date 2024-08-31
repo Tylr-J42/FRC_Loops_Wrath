@@ -29,6 +29,17 @@ public class Feeder extends SubsystemBase{
         );
     }
 
+    public Command autoFeeding(){
+        return run(() -> {
+            if(shooterBeamBreak.get()){
+                feederMotor.set(1);
+            }else{
+                feederMotor.set(0);
+            }
+        }
+        );
+    }
+
     public boolean getBeamBreak(){
         return shooterBeamBreak.get();
     }
