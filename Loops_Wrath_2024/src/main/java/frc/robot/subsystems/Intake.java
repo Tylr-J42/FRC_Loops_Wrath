@@ -1,8 +1,11 @@
 package frc.robot.subsystems;
 
+import java.util.function.DoubleSupplier;
+
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.IntakeConstants;
 
@@ -16,8 +19,11 @@ public class Intake extends SubsystemBase{
         
     }
 
-    public void runIntake(double speed){
-        intakeRight.set(speed);
-        intakeLeft.set(speed);
+    public Command runIntake(DoubleSupplier speed){
+        return run(() -> {
+        intakeRight.set(speed.getAsDouble());
+        intakeLeft.set(speed.getAsDouble());
+        }
+        );
     }
 }

@@ -30,7 +30,7 @@ public class RobotContainer {
         shoulder = new Shoulder();
 
         driver = new XboxController(OIConstants.kDriverXboxUSB);
-        operator = new XboxController(OIConstants.kOperatorXboxUSB)
+        operator = new XboxController(OIConstants.kOperatorXboxUSB);
 
         configureBindings();
     }
@@ -46,9 +46,13 @@ public class RobotContainer {
             )
         );
 
+        driver.leftTrigger().whileTrue(intake.runIntake(() -> 1));
+
+    
+
     }
 
     public Command getAutonomousCommand() {
-        return Commands.print("No autonomous command configured");
+        return Commands.print("No autonomous command configured");    
     }
 }
