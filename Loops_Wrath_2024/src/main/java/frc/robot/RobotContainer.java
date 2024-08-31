@@ -36,6 +36,9 @@ public class RobotContainer {
     public double tvecY;
     public double tvecZ;
 
+    public double targetTX;
+    public double targetTY;
+
     public RobotContainer() {
         drivetrain = new Drivetrain(new Pose2d());
         shooter = new Shooter();
@@ -47,7 +50,7 @@ public class RobotContainer {
         operator = new CommandXboxController(OIConstants.kOperatorXboxUSB);
 
         configureBindings();
-        coprocessorNetworktables();
+         coprocessorNetworktables();
     }
 
     private void coprocessorNetworktables(){
@@ -58,6 +61,8 @@ public class RobotContainer {
         NetworkTableEntry tvecXEntry;
         NetworkTableEntry tvecYEntry;
         NetworkTableEntry tvecZEntry;
+
+        Double camTiltDegrees = 30.0;
         
         Optional<Alliance> alliance = DriverStation.getAlliance();
         if(DriverStation.Alliance.Red.equals(alliance)){
@@ -74,6 +79,8 @@ public class RobotContainer {
         tvecY = tvecYEntry.getDouble(0);
         tvecZ = tvecZEntry.getDouble(0);
 
+        targetTX = Math.toDegrees(Math.atan(tvecZ/tvecX));
+        targetTY = Math.toDegrees(Math.atan(tvecZ/tvecY))+camTiltDegrees;
     }
 
     private void configureBindings() {
@@ -88,6 +95,8 @@ public class RobotContainer {
         );
 
         driver.leftTrigger().whileTrue(intake.runIntake(() -> 1.0));
+
+        
         }
 
     public Command getAutonomousCommand() {

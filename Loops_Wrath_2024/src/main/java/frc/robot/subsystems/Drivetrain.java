@@ -348,6 +348,32 @@ public class Drivetrain extends SubsystemBase {
             this);
     }
 
+    public Command autoAim(DoubleSupplier xSpeed, DoubleSupplier ySpeed, DoubleSupplier error, double deadband) {
+        PIDController controller = new PIDController(
+            AutoConstants.kPHeadingController, 
+            0, 
+            AutoConstants.kDHeadingController
+        );
+        controller.enableContinuousInput(-180, 180);
+
+        double setpoint = this.getGyroAngle()+error.getAsDouble();
+        
+        return new PIDCommand(
+            controller, 
+            this::getGyroAngle, 
+            setpoint, 
+            (output) -> {
+                this.drive(
+                    -MathUtil.applyDeadband(xSpeed.getAsDouble(), deadband), 
+                    -MathUtil.applyDeadband(ySpeed.getAsDouble(), deadband), 
+                    output, 
+                    () -> fieldRelativeControl, 
+                    true
+                );
+            }, 
+            this);
+    }
+
     /**
      * Sets the wheels into an X formation to prevent movement.
      */

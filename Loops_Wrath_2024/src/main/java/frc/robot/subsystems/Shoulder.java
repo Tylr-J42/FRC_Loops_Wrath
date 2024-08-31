@@ -7,6 +7,7 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -20,6 +21,8 @@ public class Shoulder extends SubsystemBase{
     private ArmFeedforward shoulderFF;
 
     private RelativeEncoder shoulderEncoder;
+    
+    private boolean beambreak;
 
     public Shoulder(BooleanSupplier beambreak){
         shoulder = new CANSparkMax(ShoulderConstants.kShoulderID, MotorType.kBrushless);
@@ -31,7 +34,7 @@ public class Shoulder extends SubsystemBase{
     }
 
     public void angleShoulder(DoubleSupplier angle){
-        shoulder.setVoltage(shoulderPID.calculate(shoulderEncoder.getPosition(), angle.getAsDouble()) + shoulderFF.calculate(angle.getAsDouble(), 0));
+        shoulder.setVoltage(shoulderPID.calculate(MathUtil.clamp(shoulderEncoder.getPosition(), 10.0, 210), angle.getAsDouble()) + shoulderFF.calculate(angle.getAsDouble(), 0));
     }
 
     public double getShoulderAngle(){
@@ -42,10 +45,22 @@ public class Shoulder extends SubsystemBase{
         return run(() -> angleShoulder(() -> ShoulderConstants.kAmpAngle));
     }
 
-    public Command autoAimShoulder(){
-        return run(
-
-
+    public Command autoAimShoulder(double ty){
+        return run(() -> {
+            if(!beambreak){
+                angleShoulder(() -> ty);
+            }else{
+                angleShoulder(() -> ShoulderConstants.kStowedAngle);
+            }
+        }
         );
+    }
+
+    public BooleanSupplier autoAimAtSetpoint(double ty){
+        if(Math.abs(getShoulderAngle()-ty)<=4){
+            return () -> true;
+        }else{
+            return () -> false;
+        }
     }
 }
