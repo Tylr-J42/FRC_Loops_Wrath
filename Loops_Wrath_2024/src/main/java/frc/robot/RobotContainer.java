@@ -23,6 +23,15 @@ import frc.robot.subsystems.Feeder;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Shoulder;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.util.PPLibTelemetry;
+import com.pathplanner.lib.util.PathPlannerLogging;
 
 public class RobotContainer {
     private Drivetrain drivetrain;
@@ -41,6 +50,10 @@ public class RobotContainer {
     public double targetTX;
     public double targetTY;
 
+    private SendableChooser<Command> autoChooser;
+
+    private static final String kAutoTabName = "Autonomous";
+
     public RobotContainer() {
         drivetrain = new Drivetrain(new Pose2d());
         shooter = new Shooter();
@@ -51,10 +64,11 @@ public class RobotContainer {
         driver = new CommandXboxController(OIConstants.kDriverXboxUSB);
         operator = new CommandXboxController(OIConstants.kOperatorXboxUSB);
 
-        Trigger beamBreakTrigger = new Trigger(feeder::getBeamBreak);
-
+        autoChooser = AutoBuilder.buildAutoChooser();
+        
+        coprocessorNetworktables();
+        shuffleboardSetup();
         configureBindings();
-         coprocessorNetworktables();
     }
 
     private void coprocessorNetworktables(){
@@ -100,6 +114,7 @@ public class RobotContainer {
 
         feeder.setDefaultCommand(feeder.manualFeedNote(() -> 0.0));
         shooter.setDefaultCommand(shooter.spinOff());
+        shoulder.setDefaultCommand(shoulder.autoAimShoulder(targetTY));
 
         driver.leftTrigger().whileTrue(Commands.parallel(
             intake.runIntake(() -> 1.0),
@@ -112,6 +127,18 @@ public class RobotContainer {
 
         operator.rightTrigger().toggleOnTrue(shooter.spinup());
 
+        operator.a().whileTrue(Commands.parallel(shoulder.ampShotCommand(), shooter.spinup()));
+
+        }
+
+        private void shuffleboardSetup() {
+            ShuffleboardTab autoTab = Shuffleboard.getTab(kAutoTabName);
+            autoTab.add("Autonomous Selector", autoChooser)
+                .withPosition(0, 0)
+                .withSize(2, 1)
+                .withWidget(BuiltInWidgets.kComboBoxChooser);
+
+            Shuffleboard.selectTab(kAutoTabName);
         }
 
     public Command getAutonomousCommand() {
