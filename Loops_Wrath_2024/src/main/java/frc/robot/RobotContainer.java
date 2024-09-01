@@ -5,6 +5,7 @@
 package frc.robot;
 
 import java.util.Optional;
+import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.networktables.NetworkTable;
@@ -52,7 +53,11 @@ public class RobotContainer {
 
     private SendableChooser<Command> autoChooser;
 
+    private Double camTiltDegrees = 30.0;
+
     private static final String kAutoTabName = "Autonomous";
+
+    public Trigger onTargetTrigger;
 
     public RobotContainer() {
         drivetrain = new Drivetrain(new Pose2d());
@@ -65,10 +70,30 @@ public class RobotContainer {
         operator = new CommandXboxController(OIConstants.kOperatorXboxUSB);
 
         autoChooser = AutoBuilder.buildAutoChooser();
-        
+
         coprocessorNetworktables();
         shuffleboardSetup();
         configureBindings();
+
+        NamedCommands.registerCommand(
+            "AutoAim", 
+            Commands.sequence(
+                Commands.parallel(drivetrain.autoAim(getTargetTX()),
+                    shoulder.autoAimShoulder(getTargetTY()),
+                    shooter.spinup()
+                ).until(() -> onTargetTrigger.equals(true)),
+                Commands.parallel(drivetrain.autoAim(getTargetTX()),
+                    shoulder.autoAimShoulder(getTargetTY()),
+                    shooter.spinup(),
+                    feeder.manualFeedNote(() -> 1.0).until(() -> feeder.getBeamBreak())
+                )
+            )
+        );
+
+        NamedCommands.registerCommand(
+            "IntakeNote",
+            Commands.parallel(intake.runIntake(() -> 1), feeder.autoFeeding())
+        );
     }
 
     private void coprocessorNetworktables(){
@@ -79,8 +104,6 @@ public class RobotContainer {
         NetworkTableEntry tvecXEntry;
         NetworkTableEntry tvecYEntry;
         NetworkTableEntry tvecZEntry;
-
-        Double camTiltDegrees = 30.0;
         
         Optional<Alliance> alliance = DriverStation.getAlliance();
         if(DriverStation.Alliance.Red.equals(alliance)){
@@ -97,12 +120,24 @@ public class RobotContainer {
         tvecY = tvecYEntry.getDouble(0);
         tvecZ = tvecZEntry.getDouble(0);
 
+    }
+
+    private DoubleSupplier getTargetTX(){
         targetTX = Math.toDegrees(Math.atan(tvecZ/tvecX));
+        return () -> targetTX;
+    }
+
+    private DoubleSupplier getTargetTY(){
         targetTY = Math.toDegrees(Math.atan(tvecZ/tvecY))+camTiltDegrees;
+        return () -> targetTY;
     }
 
     private void configureBindings() {
         
+        onTargetTrigger = new Trigger(() -> shoulder.autoAimAtSetpoint(getTargetTY()).getAsBoolean() && 
+        drivetrain.autoAimAtSetpoint(getTargetTX()).getAsBoolean() && 
+        shooter.flywheelAtSetpoint().getAsBoolean());
+
         drivetrain.setDefaultCommand(
             drivetrain.teleopCommand(
                 () -> { return driver.getLeftY();}, 
@@ -114,7 +149,7 @@ public class RobotContainer {
 
         feeder.setDefaultCommand(feeder.manualFeedNote(() -> 0.0));
         shooter.setDefaultCommand(shooter.spinOff());
-        shoulder.setDefaultCommand(shoulder.autoAimShoulder(targetTY));
+        shoulder.setDefaultCommand(shoulder.autoAimShoulder(getTargetTY()));
 
         driver.leftTrigger().whileTrue(Commands.parallel(
             intake.runIntake(() -> 1.0),

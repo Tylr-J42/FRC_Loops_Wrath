@@ -348,7 +348,7 @@ public class Drivetrain extends SubsystemBase {
             this);
     }
 
-    public Command autoAim(DoubleSupplier xSpeed, DoubleSupplier ySpeed, DoubleSupplier error, double deadband) {
+    public Command autoAim(DoubleSupplier error) {
         PIDController controller = new PIDController(
             AutoConstants.kPHeadingController, 
             0, 
@@ -364,14 +364,22 @@ public class Drivetrain extends SubsystemBase {
             setpoint, 
             (output) -> {
                 this.drive(
-                    -MathUtil.applyDeadband(xSpeed.getAsDouble(), deadband), 
-                    -MathUtil.applyDeadband(ySpeed.getAsDouble(), deadband), 
+                    -MathUtil.applyDeadband(0.0, 0.0), 
+                    -MathUtil.applyDeadband(0.0, 0.0), 
                     output, 
                     () -> fieldRelativeControl, 
                     true
                 );
             }, 
             this);
+    }
+
+    public BooleanSupplier autoAimAtSetpoint(DoubleSupplier error){
+        if(Math.abs(error.getAsDouble())<=3.0){
+            return () -> true;
+        }else{
+            return () -> false;
+        }
     }
 
     /**

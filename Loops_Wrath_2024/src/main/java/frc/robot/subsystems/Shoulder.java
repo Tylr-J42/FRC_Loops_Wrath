@@ -45,10 +45,10 @@ public class Shoulder extends SubsystemBase{
         return run(() -> angleShoulder(() -> ShoulderConstants.kAmpAngle));
     }
 
-    public Command autoAimShoulder(double ty){
+    public Command autoAimShoulder(DoubleSupplier ty){
         return run(() -> {
             if(!beambreak){
-                angleShoulder(() -> ty);
+                angleShoulder(() -> ty.getAsDouble());
             }else{
                 angleShoulder(() -> ShoulderConstants.kStowedAngle);
             }
@@ -56,8 +56,8 @@ public class Shoulder extends SubsystemBase{
         );
     }
 
-    public BooleanSupplier autoAimAtSetpoint(double ty){
-        if(Math.abs(getShoulderAngle()-ty)<=4){
+    public BooleanSupplier autoAimAtSetpoint(DoubleSupplier ty){
+        if(Math.abs(getShoulderAngle()-ty.getAsDouble())<=3.0){
             return () -> true;
         }else{
             return () -> false;

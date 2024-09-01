@@ -1,5 +1,7 @@
 package frc.robot.subsystems;
 
+import java.util.function.BooleanSupplier;
+
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkPIDController;
@@ -62,6 +64,15 @@ public class Shooter extends SubsystemBase{
         return run(() -> 
             setShooterSpeeds(0.0, 0.0)
         );
+    }
+
+    public BooleanSupplier flywheelAtSetpoint(){
+        if(Math.abs(ShooterConstants.flywheelSpeedRight - rightEncoder.getVelocity()) <= 250.0 && 
+        Math.abs(ShooterConstants.flywheelSpeedLeft - leftEncoder.getVelocity()) <= 250.0){
+            return () -> true;
+        }else{
+            return () -> false;
+        }
     }
 
     public double getShooterSpeedRight(){
